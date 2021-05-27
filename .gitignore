@@ -1,0 +1,8 @@
+__pycache__/
+*.egg-info/
+_skbuild/
+python/CMSJMECalculators/cmake/
+python/CMSJMECalculators/include/
+python/CMSJMECalculators/lib/
+tests/data/JECDatabase
+tests/data/JRDatabase
