@@ -273,10 +273,10 @@ public:
 
   FatJetVariationsCalculator() = default;
 
-  void setJMRValues(double nominal, double up=1., double down=1.) { m_jmrVals = { nominal, up, down }; }
-  void setGMRValues(double nominal, double up=1., double down=1.) { m_gmrVals = { nominal, up, down }; }
-  void setJMSValues(double nominal, double up=1., double down=1.) { m_jmsVals = { nominal, up/nominal, down/nominal }; }
-  void setGMSValues(double nominal, double up=1., double down=1.) { m_gmsVals = { nominal, up/nominal, down/nominal }; }
+  void setJMRValues(double nominal, double up=1., double down=1.) { m_jmrVals = {{ nominal, up, down }}; }
+  void setGMRValues(double nominal, double up=1., double down=1.) { m_gmrVals = {{ nominal, up, down }}; }
+  void setJMSValues(double nominal, double up=1., double down=1.) { m_jmsVals = {{ nominal, up/nominal, down/nominal }}; }
+  void setGMSValues(double nominal, double up=1., double down=1.) { m_gmsVals = {{ nominal, up/nominal, down/nominal }}; }
   void setPuppiCorrections(const std::string& genFormula, const std::array<double, 6>& reco_cen_params, const std::array<double, 6>& reco_for_params, const std::array<double, 6>& resol_cen_params, const std::array<double, 6>& resol_for_params);
 
   std::vector<std::string> available(const std::string& attr = {}) const;
@@ -295,10 +295,10 @@ public:
 private:
   std::unique_ptr<reco::FormulaEvaluator> m_puppiCorrGen, m_puppiPoly5;
   std::array<double,6> m_puppiCorrRecoParam_cen, m_puppiCorrRecoParam_for, m_puppiResolParam_cen, m_puppiResolParam_for;
-  std::array<double,3> m_jmrVals = {1., 1., 1.}; // nominal, up, down
-  std::array<double,3> m_gmrVals = {1., 1., 1.}; // nominal, up, down
-  std::array<double,3> m_jmsVals = {1., 1., 1.}; // nominal, up/nominal, down/nominal
-  std::array<double,3> m_gmsVals = {1., 1., 1.}; // nominal, up/nominal, down/nominal
+  std::array<double,3> m_jmrVals = {{1., 1., 1.}}; // nominal, up, down
+  std::array<double,3> m_gmrVals = {{1., 1., 1.}}; // nominal, up, down
+  std::array<double,3> m_jmsVals = {{1., 1., 1.}}; // nominal, up/nominal, down/nominal
+  std::array<double,3> m_gmsVals = {{1., 1., 1.}}; // nominal, up/nominal, down/nominal
 };
 
 #endif // CMSJMECalculators_JMESystematicsCalculators_H

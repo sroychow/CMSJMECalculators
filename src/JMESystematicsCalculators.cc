@@ -244,7 +244,7 @@ JetVariationsCalculator::result_t JetVariationsCalculator::produce(
       for ( std::size_t j{0}; j != nJets; ++j ) {
         jerBin[j] = jerSplitID(pt_nom[j], jet_eta[j]);
       }
-      for ( std::size_t i{0}; i != 6; ++i ) {
+      for ( int i{0}; i != 6; ++i ) {
         p4compv_t pt_jeriUp{pt_nom}, mass_jeriUp{mass_nom};
         p4compv_t pt_jeriDown{pt_nom}, mass_jeriDown{mass_nom};
         for ( std::size_t j{0}; j != nJets; ++j ) {
@@ -486,7 +486,7 @@ FatJetVariationsCalculator::result_t FatJetVariationsCalculator::produce(
       if ( msd_nom[i] > 0. ) { // JMR for groomed
         // genGroomedJet
         int igsj1{-1}, igsj2{-1};
-        for ( int ig{0}; ig != gensubjet_eta.size(); ++ig ) {
+        for ( int ig{0}; ig != int(gensubjet_eta.size()); ++ig ) {
           const auto dphi = phi_mpi_pi(gensubjet_phi[ig]-jet_groomedP4[i].Phi());
           const auto deta = (gensubjet_eta[ig]-jet_groomedP4[i].Eta());
           const auto dr2 = dphi*dphi + deta*deta;
@@ -542,7 +542,7 @@ FatJetVariationsCalculator::result_t FatJetVariationsCalculator::produce(
       for ( std::size_t j{0}; j != nJets; ++j ) {
         jerBin[j] = jerSplitID(pt_nom[j], jet_eta[j]);
       }
-      for ( std::size_t i{0}; i != 6; ++i ) {
+      for ( int i{0}; i != 6; ++i ) {
         p4compv_t pt_jeriUp{pt_nom}, mass_jeriUp{mass_nom}, msd_jeriUp{msd_nom};
         p4compv_t pt_jeriDown{pt_nom}, mass_jeriDown{mass_nom}, msd_jeriDown{msd_nom};
         for ( std::size_t j{0}; j != nJets; ++j ) {
@@ -799,7 +799,7 @@ void Type1METVariationsCalculator::addVariations(Type1METVariationsCalculator::r
           out.addR_proj(iVar++, jet_cosPhi, jet_sinPhi, dr_jernom);                         // smeared nominal
           if ( m_splitJER ) {
             const auto jerBin = jerSplitID(jet_pt_nom, jet_eta[i]);
-            for ( std::size_t k{0}; k != 6; ++k ) {
+            for ( int k{0}; k != 6; ++k ) {
               if ( jerBin == k ) { // vary
                 out.addR_proj(iVar++, jet_cosPhi, jet_sinPhi, dr_jerup);                    // JER[k]-up
                 out.addR_proj(iVar++, jet_cosPhi, jet_sinPhi, dr_jerdown);                  // JER[k]-down
@@ -999,5 +999,5 @@ std::array<double,4> FixEE2017Type1METVariationsCalculator::calculateFixEE2017Of
       }
     }
   }
-  return { delta_x_T1Jet, delta_y_T1Jet, delta_x_rawJet, delta_y_rawJet };
+  return {{ delta_x_T1Jet, delta_y_T1Jet, delta_x_rawJet, delta_y_rawJet }};
 }
