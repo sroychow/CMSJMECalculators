@@ -1,9 +1,14 @@
+#if defined(PROJECT_NAME) && defined(CMSSW_GIT_HASH)
+#include "UserCode/CMSJMECalculators/interface/JMESystematicsCalculators.h"
+#include "CondFormats/JetMETObjects/interface/FactorizedJetCorrectorCalculator.h"
+#else
 #include "JMESystematicsCalculators.h"
+#include "FactorizedJetCorrectorCalculator.h"
+#endif
 
 #include <Math/GenVector/LorentzVector.h>
 #include <Math/GenVector/PtEtaPhiM4D.h>
 #include "Math/VectorUtil.h"
-#include "FactorizedJetCorrectorCalculator.h"
 
 #include "TRandom3.h"
 

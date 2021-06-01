@@ -1,0 +1,7 @@
+<use name="ROOTVecOps"/>
+<use name="CondFormats/JetMETObjects"/>
+<use name="JetMETCorrections/Modules"/>
+<use name="CommonTools/Utils"/>
+<export>
+  <lib name="1"/>
+</export>

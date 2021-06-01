@@ -21,7 +21,7 @@ endif()
 
 find_package(ROOT REQUIRED COMPONENTS MathCore Hist ROOTVecOps Physics)
 
-install(DIRECTORY include/ DESTINATION ${PKG_HDR_INSTALL})
+install(DIRECTORY interface/ DESTINATION ${PKG_HDR_INSTALL})
 
 file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/jetclasses_filenames.txt FILENAMES_CMSJET_INC REGEX ".*/interface/.*")
 file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/jetclasses_filenames.txt FILENAMES_CMSJET_SRC REGEX ".*/src/.*")
@@ -32,7 +32,7 @@ install(FILES ${INC_CMSJET} DESTINATION ${PKG_HDR_INSTALL})
 
 add_library(CMSJMECalculators SHARED ${SRC_CMSJET} src/JMESystematicsCalculators.cc)
 add_dependencies(CMSJMECalculators CMSJetSources)
-target_include_directories(CMSJMECalculators PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CMSJet/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CMSJet/src> $<INSTALL_INTERFACE:${PKG_HDR_INSTALL}>)
+target_include_directories(CMSJMECalculators PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/interface> $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CMSJet/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CMSJet/src> $<INSTALL_INTERFACE:${PKG_HDR_INSTALL}>)
 target_link_libraries(CMSJMECalculators ROOT::Hist ROOT::ROOTVecOps ROOT::Physics)
 install(TARGETS CMSJMECalculators EXPORT CMSJMECalculators-targets LIBRARY DESTINATION ${PKG_LIB_INSTALL})
 
