@@ -21,7 +21,7 @@ def sessionWithResponseChecks():
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError as ex:
-            logger.exception(f"Problem with request '{resp.request.method} {resp.request.url}' (traceback below)")
+            logger.exception("Problem with request '{0} {1}' (traceback below)".format(resp.request.method, resp.request.url))
     session = requests.Session()
     session.hooks = {
         "response" : response_check
@@ -94,7 +94,7 @@ class JetDatabaseCache(object):
                 self._status["branches_etag"] = r_branches.headers["ETag"]
                 return r_master["object"]["sha"]
         except requests.exceptions.ConnectionError as ex:
-            logger.exception(f"Problem connecting to {self._baseUrl} (traceback below)")
+            logger.exception("Problem connecting to {0} (traceback below)".format(self._baseUrl))
 
     def _init(self, session=None):
         if os.path.exists(self.statusFile):
@@ -120,10 +120,10 @@ class JetDatabaseCache(object):
         masterSHA = self._get_master_sha(session=session)
         ## Update the *tree* of the (fetched tags of) textFiles if necessary
         if masterSHA is None:
-            logger.warning(f"Unable to check if the repository {self._baseUrl} has been updated, assuming last known state")
+            logger.warning("Unable to check if the repository {} has been updated, assuming last known state".format(self._baseUrl))
         elif "sha" not in self._status or self._status["sha"] != masterSHA:
             if not self._mayWrite:
-                logger.warning(f"Repository {self._baseUrl} has been updated. Please update the status file by running checkCMSJMEDatabaseCaches (or equivalent). This instance has no write access, and will use the cached listing and contents.")
+                logger.warning("Repository {0} has been updated. Please update the status file by running checkCMSJMEDatabaseCaches (or equivalent). This instance has no write access, and will use the cached listing and contents.".format(self._baseUrl))
             else:
                 logger.debug("Updating root of {0} at {1}".format(self.repository, masterSHA))
                 with self._statusLockAndSave(expires=60):
@@ -266,9 +266,9 @@ def checkCMS_CLI():
     logging.basicConfig(level=(logging.INFO if args.quiet else logging.DEBUG))
     mayWrite = not args.readonly
     with sessionWithResponseChecks() as session:
-        logger.info("Loading JECDatabase from 'cms-jet/JECDatabase', with {0}".format(f"cache dir in {args.cachedir}" if args.cachedir else "default cache dir"))
+        logger.info("Loading JECDatabase from 'cms-jet/JECDatabase', with {0}".format("cache dir in {0}".format(args.cachedir) if args.cachedir else "default cache dir"))
         jecDBCache = JetDatabaseCache("JECDatabase", repository="cms-jet/JECDatabase", cachedir=args.cachedir, mayWrite=(not args.readonly))
-        logger.info("Loading JRDatabase from 'cms-jet/JRDatabase', with {0}".format(f"cache dir in {args.cachedir}" if args.cachedir else "default cache dir"))
+        logger.info("Loading JRDatabase from 'cms-jet/JRDatabase', with {0}".format("cache dir in {0}".format(args.cachedir) if args.cachedir else "default cache dir"))
         jrDBCache = JetDatabaseCache("JRDatabase", repository="cms-jet/JRDatabase", cachedir=args.cachedir, mayWrite=(not args.readonly))
         if args.interactive:
             import IPython
