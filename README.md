@@ -20,12 +20,28 @@ pip install git+https://github.com/pieterdavid/CMSJMECalculators.git
 [scikit-build](https://scikit-build.readthedocs.io/en/latest/) is used to
 compile the C++ components against the available ROOT distribution.
 
-From C++ there are two options: [CMake](https://cmake.org/) and (inside CMSSW)
+From C++ there are two options: [CMake](https://cmake.org/) and (inside
+CMSSW)
 [scram](https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideScram).
 
-TODO add python installation to CMake-without-skbuild?
+A standalone CMake build can be done using the standard commands
+(after cloning the repository):
+```bash
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<your-prefix> [other-options] <source-clone>
+make
+make install
+```
+Please note that this will only install the C++ components, not the python
+helpers (yet).
 
-TODO add BuildFile.xml (directory layout should be compatible) and test
+TODO add python installation there
+
+Building with scram inside CMSSW is also straightforward:
+```bash
+cd $CMSSW_BASE/src
+git clone -o upstream https://github.com/pieterdavid/CMSJMECalculators.git UserCode/CMSJMECalculators
+scram b
+```
 
 ## Usage
 
@@ -40,6 +56,11 @@ Note that this will load the shared library and headers in
 so they can from then on also be used in JITted code, e.g. from
 [RDataFrame](https://root.cern/doc/master/classROOT_1_1RDataFrame.html).
 
+When installed inside a CMSSW environment, the import should be modified to
+```python
+from UserCode.CMSJMECalculators.CMSJMECalculators.utils import loadJMESystematicsCalculators
+```
+
 TODO more detail on how to call (improve helpers from tests), and a C++ example
 
 ## Testing and development
@@ -52,5 +73,9 @@ They can be run with
 ```python
 pytest tests
 ```
+or, inside a CMSSW environment where python2 is the default
+```python
+python3 -m pytest tests
+```
 
-TODO expand, scripts for larger test samples?
+TODO make tests python2-compatible, expand, scripts for larger tests samples?
