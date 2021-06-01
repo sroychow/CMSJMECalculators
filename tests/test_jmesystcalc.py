@@ -1,9 +1,29 @@
 import pytest
-import os.path
+import os, os.path
 
 testData = os.path.join(os.path.dirname(__file__), "data")
 
-from CMSJMECalculators.jetdatabasecache import JetDatabaseCache
+if "CMSSW_BASE" in os.environ:  # CMSSW/scram version
+    from UserCode.CMSJMECalculators.CMSJMECalculators.utils import (
+            loadJMESystematicsCalculators,
+            fatjet_jmsValues,
+            fatjet_jmrValues,
+            fatjet_gmsValues_tau21DDT,
+            fatjet_gmrValues_tau21DDT,
+            fatjet_puppi_msd_params
+            )
+    from UserCode.CMSJMECalculators.CMSJMECalculators.jetdatabasecache import JetDatabaseCache
+else:  # pip version
+    from CMSJMECalculators.utils import (
+            loadJMESystematicsCalculators,
+            fatjet_jmsValues,
+            fatjet_jmrValues,
+            fatjet_gmsValues_tau21DDT,
+            fatjet_gmrValues_tau21DDT,
+            fatjet_puppi_msd_params
+            )
+    from CMSJMECalculators.jetdatabasecache import JetDatabaseCache
+
 jecDBCache = JetDatabaseCache("JECDatabase", repository="cms-jet/JECDatabase", cachedir=testData, mayWrite=True)
 jrDBCache = JetDatabaseCache("JRDatabase", repository="cms-jet/JRDatabase", cachedir=testData, mayWrite=True)
 
@@ -131,8 +151,6 @@ def configureCalc(calc, jecTag=None, jerTag=None, jetType="AK4PFchs", levels=Non
             calc.setL1JEC(jecParams_l1)
     if jerTag:
         calc.setSmearing(jrDBCache.getPayload(jerTag, "PtResolution", jetType), jrDBCache.getPayload(jerTag, "SF", jetType), splitJER, True, 0.2, 3.)
-
-from CMSJMECalculators.utils import fatjet_jmsValues, fatjet_jmrValues, fatjet_gmsValues_tau21DDT, fatjet_gmrValues_tau21DDT, fatjet_puppi_msd_params
 
 def configureFatJetCalc(calc, isMC=False, year=None, doSmearing=False, jmr=None, jms=None, isTau21DDT=False, gmr=None, gms=None, puppiGen=None, puppiRecoCorrCen=None, puppiRecoCorrFwd=None, puppiResolCen=None, puppiResolFwd=None):
     ## defaults
@@ -339,7 +357,6 @@ def nanofatjetargsMC16():
 
 @pytest.fixture(scope="module")
 def jetvarcalc_empty():
-    from CMSJMECalculators.utils import loadJMESystematicsCalculators
     import ROOT as gbl
     loadJMESystematicsCalculators()
     calc = gbl.JetVariationsCalculator()
@@ -347,7 +364,6 @@ def jetvarcalc_empty():
 
 @pytest.fixture(scope="module")
 def jetvarcalcMC16_smear():
-    from CMSJMECalculators.utils import loadJMESystematicsCalculators
     import ROOT as gbl
     loadJMESystematicsCalculators()
     calc = gbl.JetVariationsCalculator()
@@ -356,7 +372,6 @@ def jetvarcalcMC16_smear():
 
 @pytest.fixture(scope="module")
 def jetvarcalcMC16_jec():
-    from CMSJMECalculators.utils import loadJMESystematicsCalculators
     import ROOT as gbl
     loadJMESystematicsCalculators()
     calc = gbl.JetVariationsCalculator()
@@ -366,7 +381,6 @@ def jetvarcalcMC16_jec():
 
 @pytest.fixture(scope="module")
 def jetvarcalcMC16_jesunc():
-    from CMSJMECalculators.utils import loadJMESystematicsCalculators
     import ROOT as gbl
     loadJMESystematicsCalculators()
     calc = gbl.JetVariationsCalculator()
@@ -377,7 +391,6 @@ def jetvarcalcMC16_jesunc():
 
 @pytest.fixture(scope="module")
 def metvarcalcMC16_jesunc():
-    from CMSJMECalculators.utils import loadJMESystematicsCalculators
     import ROOT as gbl
     loadJMESystematicsCalculators()
     calc = gbl.Type1METVariationsCalculator()
@@ -390,7 +403,6 @@ def metvarcalcMC16_jesunc():
 @pytest.fixture(scope="module")
 def metvarcalcMC17_FixEE():
     ## a better test even would be to have a different JEC than production
-    from CMSJMECalculators.utils import loadJMESystematicsCalculators
     import ROOT as gbl
     loadJMESystematicsCalculators()
     calc = gbl.FixEE2017Type1METVariationsCalculator()
@@ -402,7 +414,6 @@ def metvarcalcMC17_FixEE():
 
 @pytest.fixture(scope="module")
 def jetvarcalcMC18_hem():
-    from CMSJMECalculators.utils import loadJMESystematicsCalculators
     import ROOT as gbl
     loadJMESystematicsCalculators()
     calc = gbl.JetVariationsCalculator()
@@ -414,7 +425,6 @@ def jetvarcalcMC18_hem():
 
 @pytest.fixture(scope="module")
 def fatjetvarcalcMC16():
-    from CMSJMECalculators.utils import loadJMESystematicsCalculators
     import ROOT as gbl
     loadJMESystematicsCalculators()
     tp = gbl.FatJetVariationsCalculator
