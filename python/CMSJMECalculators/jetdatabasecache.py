@@ -272,4 +272,4 @@ def checkCMS_CLI():
         jrDBCache = JetDatabaseCache("JRDatabase", repository="cms-jet/JRDatabase", cachedir=args.cachedir, mayWrite=(not args.readonly))
         if args.interactive:
             import IPython
-            IPython.embed(header='JEC and JR database caches are available in `jecDBCache` and `jrDBCache`\nExample: pl = jecDBCache.getPayload("Summer19UL17_RunE_V1_SimpleL1_DATA", "L1FastJet", "AK4PFchs")')
+            IPython.embed(header='JEC and JR database caches are available in `jecDBCache` and `jrDBCache`\nExample: pl = jecDBCache.getPayload("Summer16_07Aug2017_V11_MC", "L1FastJet", "AK4PFchs")')

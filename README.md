@@ -149,9 +149,9 @@ jrDBCache = JetDatabaseCache("JRDatabase", repository="cms-jet/JRDatabase")
 # usage example, returns the local path
 pl = jecDBCache.getPayload("Summer16_07Aug2017_V11_MC", "L1FastJet", "AK4PFchs")
 ```
-The caches can also be updated and used interactively with the
-`checkCMSJMEDatabaseCaches` script in the package, which will construct the
-two database cache helper and start an IPython shell.
+The cache can also be checked and updated with the `checkCMSJMEDatabaseCaches`
+script, which has an interactive mode (`-i` flag) that will start an IPython
+shell after constructing the two database cache helpers.
 
 ## Testing and development
 
