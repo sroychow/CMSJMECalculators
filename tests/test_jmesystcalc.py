@@ -4,44 +4,28 @@ import os, os.path
 testData = os.path.join(os.path.dirname(__file__), "data")
 
 if "CMSSW_BASE" in os.environ:  # CMSSW/scram version
+    from UserCode.CMSJMECalculators.CMSJMECalculators.load import loadJMESystematicsCalculators
     from UserCode.CMSJMECalculators.CMSJMECalculators.utils import (
-            loadJMESystematicsCalculators,
-            fatjet_jmsValues,
-            fatjet_jmrValues,
-            fatjet_gmsValues_tau21DDT,
-            fatjet_gmrValues_tau21DDT,
-            fatjet_puppi_msd_params
+            toRVecFloat,
+            getJetMETArgs,
+            getFatJetArgs,
+            configureCalc,
+            configureFatJetCal,
             )
     from UserCode.CMSJMECalculators.CMSJMECalculators.jetdatabasecache import JetDatabaseCache
 else:  # pip version
+    from CMSJMECalculators.load import loadJMESystematicsCalculators
     from CMSJMECalculators.utils import (
-            loadJMESystematicsCalculators,
-            fatjet_jmsValues,
-            fatjet_jmrValues,
-            fatjet_gmsValues_tau21DDT,
-            fatjet_gmrValues_tau21DDT,
-            fatjet_puppi_msd_params
+            toRVecFloat,
+            getJetMETArgs,
+            getFatJetArgs,
+            configureCalc,
+            configureFatJetCalc
             )
     from CMSJMECalculators.jetdatabasecache import JetDatabaseCache
 
 jecDBCache = JetDatabaseCache("JECDatabase", repository="cms-jet/JECDatabase", cachedir=testData, mayWrite=True)
 jrDBCache = JetDatabaseCache("JRDatabase", repository="cms-jet/JRDatabase", cachedir=testData, mayWrite=True)
-
-def toRVecFloat(values):
-    import ROOT as gbl
-    RVec_float = getattr(gbl, "ROOT::VecOps::RVec<float>")
-    res = RVec_float(len(values), 0.)
-    for i,val in enumerate(values):
-        res[i] = val
-    return res
-
-def toRVecInt(values):
-    import ROOT as gbl
-    RVec_int = getattr(gbl, "ROOT::VecOps::RVec<int>")
-    res = RVec_int(len(values), 0)
-    for i,val in enumerate(values):
-        res[i] = val
-    return res
 
 def getEventWith(f, condition=lambda ev : True, treeName="Events"):
     tup = f.Get(treeName)
@@ -51,162 +35,6 @@ def getEventWith(f, condition=lambda ev : True, treeName="Events"):
         i += 1
         tup.GetEntry(i)
     yield tup
-
-def getJetMETArgs(tup, isMC=True, forMET=False, isMETFixEE2017=False, addHEM2018Issue=False):
-    args = [
-        toRVecFloat(tup.Jet_pt),
-        toRVecFloat(tup.Jet_eta),
-        toRVecFloat(tup.Jet_phi),
-        toRVecFloat(tup.Jet_mass),
-        toRVecFloat(tup.Jet_rawFactor),
-        toRVecFloat(tup.Jet_area),
-        ]
-    if forMET:
-        args += [
-            toRVecFloat(tup.Jet_muonSubtrFactor),
-            toRVecFloat(tup.Jet_neEmEF),
-            toRVecFloat(tup.Jet_chEmEF),
-            ]
-    if not ( forMET and isMETFixEE2017 ):
-        args.append(toRVecInt(tup.Jet_jetId if addHEM2018Issue else []))
-    args.append(tup.fixedGridRhoFastjetAll)
-    if isMC:
-        args += [
-            (tup.run<<20) + (tup.luminosityBlock<<10) + tup.event + 1 + ( int(tup.Jet_eta[0]/.01) if tup.nJet != 0 else 0),
-            toRVecFloat(tup.GenJet_pt),
-            toRVecFloat(tup.GenJet_eta),
-            toRVecFloat(tup.GenJet_phi),
-            toRVecFloat(tup.GenJet_mass)
-            ]
-    else:
-        args += [ 0, toRVecFloat([]), toRVecFloat([]), toRVecFloat([]), toRVecFloat([]) ]
-    if forMET:
-        args += [ tup.RawMET_phi, tup.RawMET_pt ]
-        if not isMETFixEE2017:
-            args += [ tup.MET_MetUnclustEnUpDeltaX, tup.MET_MetUnclustEnUpDeltaY ]
-        else:
-            args += [ tup.METFixEE2017_MetUnclustEnUpDeltaX, tup.METFixEE2017_MetUnclustEnUpDeltaY ]
-        args += [ toRVecFloat(getattr(tup, f"CorrT1METJet_{varNm}"))
-                for varNm in ("rawPt", "eta", "phi", "area", "muonSubtrFactor") ]
-        args += [ toRVecFloat([]), toRVecFloat([]) ]
-        if isMETFixEE2017:
-            args += [ tup.MET_phi, tup.MET_pt, tup.METFixEE2017_phi, tup.METFixEE2017_pt ]
-    return args
-
-def getFatJetArgs(tup, isMC=True, addHEM2018Issue=False):
-    args = [
-        toRVecFloat(tup.FatJet_pt),
-        toRVecFloat(tup.FatJet_eta),
-        toRVecFloat(tup.FatJet_phi),
-        toRVecFloat(tup.FatJet_mass),
-        toRVecFloat(tup.FatJet_rawFactor),
-        toRVecFloat(tup.FatJet_area),
-        toRVecFloat(tup.FatJet_msoftdrop),
-        toRVecInt(tup.FatJet_subJetIdx1),
-        toRVecInt(tup.FatJet_subJetIdx2),
-        toRVecFloat(tup.SubJet_pt),
-        toRVecFloat(tup.SubJet_eta),
-        toRVecFloat(tup.SubJet_phi),
-        toRVecFloat(tup.SubJet_mass),
-        toRVecInt(tup.FatJet_jetId if addHEM2018Issue else []),
-        tup.fixedGridRhoFastjetAll
-        ]
-    if isMC:
-        args += [
-            (tup.run<<20) + (tup.luminosityBlock<<10) + tup.event + 1 + ( int(tup.Jet_eta[0]/.01) if tup.nJet != 0 else 0),
-            toRVecFloat(tup.GenJetAK8_pt),
-            toRVecFloat(tup.GenJetAK8_eta),
-            toRVecFloat(tup.GenJetAK8_phi),
-            toRVecFloat(tup.GenJetAK8_mass),
-            toRVecFloat(tup.SubGenJetAK8_pt),
-            toRVecFloat(tup.SubGenJetAK8_eta),
-            toRVecFloat(tup.SubGenJetAK8_phi),
-            toRVecFloat(tup.SubGenJetAK8_mass)
-            ]
-    else:
-        args += [ 0, toRVecFloat([]), toRVecFloat([]), toRVecFloat([]), toRVecFloat([]), toRVecFloat([]), toRVecFloat([]), toRVecFloat([]), toRVecFloat([]) ]
-    return args
-
-def configureCalc(calc, jecTag=None, jerTag=None, jetType="AK4PFchs", levels=None, levels_l1=None, splitJER=False, uncSources=None):
-    import ROOT as gbl
-    if jecTag:
-        jcp = {}
-        if levels:
-            jecParams = getattr(gbl, "std::vector<JetCorrectorParameters>")()
-            for iLev in levels:
-                if iLev not in jcp:
-                    jcp[iLev] = gbl.JetCorrectorParameters(jecDBCache.getPayload(jecTag, iLev, jetType))
-                jecParams.push_back(jcp[iLev])
-            calc.setJEC(jecParams)
-        if uncSources:
-            for jus in uncSources:
-                param = gbl.JetCorrectorParameters(jecDBCache.getPayload(jecTag, "UncertaintySources", jetType), jus)
-                calc.addJESUncertainty(jus, param)
-        if levels_l1: ## for MET
-            jecParams_l1 = getattr(gbl, "std::vector<JetCorrectorParameters>")()
-            for iLev in levels_l1:
-                if iLev not in jcp:
-                    jcp[iLev] = gbl.JetCorrectorParameters(jecDBCache.getPayload(jecTag, iLev, jetType))
-                jecParams_l1.push_back(jcp[iLev])
-            calc.setL1JEC(jecParams_l1)
-    if jerTag:
-        calc.setSmearing(jrDBCache.getPayload(jerTag, "PtResolution", jetType), jrDBCache.getPayload(jerTag, "SF", jetType), splitJER, True, 0.2, 3.)
-
-def configureFatJetCalc(calc, isMC=False, year=None, doSmearing=False, jmr=None, jms=None, isTau21DDT=False, gmr=None, gms=None, puppiGen=None, puppiRecoCorrCen=None, puppiRecoCorrFwd=None, puppiResolCen=None, puppiResolFwd=None):
-    ## defaults
-    if isMC: # mass scale
-        if jms is None:
-            jms = fatjet_jmsValues[year]
-        if gms is None:
-            if isTau21DDT:
-                gms = fatjet_gmsValues_tau21DDT[year]
-            else:
-                gms = jms
-    if jms is not None:
-        print(f"Setting JMS values {jms}")
-        if hasattr(jms, "__iter__"):
-            calc.setJMSValues(*jms)
-        else: # just nominal
-            calc.setJMSValues(jms)
-    if gms is not None:
-        print(f"Setting GMS values {gms}")
-        if hasattr(gms, "__iter__"):
-            calc.setGMSValues(*jms)
-        else: # just nominal
-            calc.setGMSValues(jms)
-    if doSmearing: # mass resolutions
-        if jmr is None:
-            jmr = fatjet_jmrValues[year]
-        if gmr is None:
-            if isTau21DDT:
-                gmr = fatjet_gmrValues_tau21DDT[year]
-            else:
-                gmr = jmr
-        print(f"Setting JMR values: {jmr}")
-        calc.setJMRValues(*jmr)
-        print(f"Setting GMR values: {gmr}")
-        calc.setGMRValues(*gmr)
-    ## PUPPI: always
-    if puppiGen is None:
-        puppiGen = fatjet_puppi_msd_params["gen"]
-    if puppiRecoCorrCen is None:
-        puppiRecoCorrCen = fatjet_puppi_msd_params["reco_cen"]
-    if puppiRecoCorrFwd is None:
-        puppiRecoCorrFwd = fatjet_puppi_msd_params["reco_fwd"]
-    if puppiResolCen is None:
-        puppiResolCen = fatjet_puppi_msd_params["resol_cen"]
-    if puppiResolFwd is None:
-        puppiResolFwd = fatjet_puppi_msd_params["resol_fwd"]
-    from cppyy import gbl
-    arrType = getattr(gbl, "std::array<double, 6>")
-    def toArr(*args):
-        assert len(args) == 6
-        arr = arrType()
-        for i,v in enumerate(args):
-            arr[i] = v
-        return arr
-    print(f"Setting PUPPI gen formula to {puppiGen}")
-    calc.setPuppiCorrections(puppiGen, *(toArr(*arg) for arg in (puppiRecoCorrCen, puppiRecoCorrFwd, puppiResolCen, puppiResolFwd)))
 
 @pytest.fixture(scope="module")
 def nanojetargsMC16():
@@ -367,7 +195,8 @@ def jetvarcalcMC16_smear():
     import ROOT as gbl
     loadJMESystematicsCalculators()
     calc = gbl.JetVariationsCalculator()
-    configureCalc(calc, jerTag="Summer16_25nsV1_MC", splitJER=True)
+    configureCalc(calc, jerTag="Summer16_25nsV1_MC", splitJER=True,
+            jecDBCache=jecDBCache, jrDBCache=jrDBCache)
     yield calc
 
 @pytest.fixture(scope="module")
@@ -376,7 +205,8 @@ def jetvarcalcMC16_jec():
     loadJMESystematicsCalculators()
     calc = gbl.JetVariationsCalculator()
     configureCalc(calc, jerTag="Summer16_25nsV1_MC", splitJER=True,
-            jecTag="Summer16_07Aug2017_V11_MC", levels=["L1FastJet", "L2Relative"])
+            jecTag="Summer16_07Aug2017_V11_MC", levels=["L1FastJet", "L2Relative"],
+            jecDBCache=jecDBCache, jrDBCache=jrDBCache)
     yield calc
 
 @pytest.fixture(scope="module")
@@ -386,7 +216,8 @@ def jetvarcalcMC16_jesunc():
     calc = gbl.JetVariationsCalculator()
     configureCalc(calc, jerTag="Summer16_25nsV1_MC", splitJER=True,
             jecTag="Summer16_07Aug2017_V11_MC", levels=["L1FastJet", "L2Relative"],
-            uncSources=["AbsoluteStat", "AbsoluteScale"])
+            uncSources=["AbsoluteStat", "AbsoluteScale"],
+            jecDBCache=jecDBCache, jrDBCache=jrDBCache)
     yield calc
 
 @pytest.fixture(scope="module")
@@ -397,7 +228,8 @@ def metvarcalcMC16_jesunc():
     calc.setUnclusteredEnergyTreshold(15.)
     configureCalc(calc, jerTag="Summer16_25nsV1_MC", splitJER=True,
             jecTag = "Summer16_07Aug2017_V11_MC", levels=["L1FastJet", "L2Relative"],
-            uncSources=["AbsoluteStat", "AbsoluteScale"], levels_l1=["L1FastJet"])
+            uncSources=["AbsoluteStat", "AbsoluteScale"], levels_l1=["L1FastJet"],
+            jecDBCache=jecDBCache, jrDBCache=jrDBCache)
     yield calc
 
 @pytest.fixture(scope="module")
@@ -409,7 +241,8 @@ def metvarcalcMC17_FixEE():
     calc.setUnclusteredEnergyTreshold(15.)
     configureCalc(calc, jerTag="Fall17_V3_MC", splitJER=False,
             jecTag="Fall17_17Nov2017_V32_MC", levels=["L1FastJet", "L2Relative"],
-            uncSources=["AbsoluteStat", "AbsoluteScale"], levels_l1=["L1FastJet"])
+            uncSources=["AbsoluteStat", "AbsoluteScale"], levels_l1=["L1FastJet"],
+            jecDBCache=jecDBCache, jrDBCache=jrDBCache)
     yield calc
 
 @pytest.fixture(scope="module")
@@ -419,7 +252,8 @@ def jetvarcalcMC18_hem():
     calc = gbl.JetVariationsCalculator()
     configureCalc(calc, jerTag="Autumn18_V7b_MC", splitJER=False,
             jecTag="Autumn18_V19_MC", levels=["L1FastJet", "L2Relative"],
-            uncSources=["AbsoluteStat", "AbsoluteScale"])
+            uncSources=["AbsoluteStat", "AbsoluteScale"],
+            jecDBCache=jecDBCache, jrDBCache=jrDBCache)
     calc.setAddHEM2018Issue(True)
     yield calc
 
@@ -431,8 +265,10 @@ def fatjetvarcalcMC16():
     calc = gbl.FatJetVariationsCalculator()
     configureCalc(calc, jetType="AK8PFPuppi", jerTag="Summer16_25nsV1_MC", splitJER=True,
             jecTag="Summer16_07Aug2017_V11_MC", levels=["L1FastJet", "L2Relative"],
-            uncSources=["AbsoluteStat", "AbsoluteScale"])
-    configureFatJetCalc(calc, isMC=True, year="2016", doSmearing=True, isTau21DDT=False)
+            uncSources=["AbsoluteStat", "AbsoluteScale"],
+            jecDBCache=jecDBCache, jrDBCache=jrDBCache)
+    configureFatJetCalc(calc, isMC=True, year="2016", doSmearing=True, isTau21DDT=False,
+            jecDBCache=jecDBCache, jrDBCache=jrDBCache)
     yield calc
 
 def test_jetvarcalc_empty(jetvarcalc_empty):
