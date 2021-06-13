@@ -4,7 +4,7 @@ import os, os.path
 testData = os.path.join(os.path.dirname(__file__), "data")
 
 if "CMSSW_BASE" in os.environ:  # CMSSW/scram version
-    from UserCode.CMSJMECalculators.CMSJMECalculators.load import loadJMESystematicsCalculators
+    from UserCode.CMSJMECalculators.CMSJMECalculators import loadJMESystematicsCalculators
     from UserCode.CMSJMECalculators.CMSJMECalculators.utils import (
             toRVecFloat,
             getJetMETArgs,
@@ -14,7 +14,7 @@ if "CMSSW_BASE" in os.environ:  # CMSSW/scram version
             )
     from UserCode.CMSJMECalculators.CMSJMECalculators.jetdatabasecache import JetDatabaseCache
 else:  # pip version
-    from CMSJMECalculators.load import loadJMESystematicsCalculators
+    from CMSJMECalculators import loadJMESystematicsCalculators
     from CMSJMECalculators.utils import (
             toRVecFloat,
             getJetMETArgs,

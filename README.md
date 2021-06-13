@@ -46,9 +46,9 @@ scram b
 ## Usage
 
 When installed as a python package, the necessary components can be loaded
-through with:
+with:
 ```python
-from CMSJMECalculators.utils import loadJMESystematicsCalculators
+from CMSJMECalculators import loadJMESystematicsCalculators
 loadJMESystematicsCalculators()
 ```
 Note that this will load the shared library and headers in
@@ -58,10 +58,83 @@ so they can from then on also be used in JITted code, e.g. from
 
 When installed inside a CMSSW environment, the import should be modified to
 ```python
-from UserCode.CMSJMECalculators.CMSJMECalculators.utils import loadJMESystematicsCalculators
+from UserCode.CMSJMECalculators.CMSJMECalculators import loadJMESystematicsCalculators
 ```
 
-TODO more detail on how to call (improve helpers from tests), and a C++ example
+The variations are calculated by the C++ classes ``JetVariationsCalculator`` and
+``FatJetVariationsCalculator`` for the AK4 and AK8 jet JER and JES variations, and
+``Type1METVariationsCalculator`` and ``FixEE2017Type1METVariationsCalculator``
+for the Type-1 MET variations, using the standard procedure or with the special
+recipe for 2017 (Type-1 smeared or standard MET is a configuration option).
+To use these, an instance should be created (with the C++ interpreter, to make it
+available from JITted code), and additional configuration passed by calling
+setter methods, e.g. in PyROOT:
+```python
+import ROOT as gbl
+calc = gbl.JetVariationsCalculator()
+calc = getattr(gbl, "myJetVarCalc")
+calc = gbl.JetVariationsCalculator()
+# redo JEC, push_back corrector parameters for different levels
+jecParams = getattr(gbl, "std::vector<JetCorrectorParameters>")()
+jecParams.push_back(gbl.JetCorrectorParameters(textfilepath))
+calc.setJEC(jecParams)
+# calculate JES uncertainties (repeat for all sources)
+jcp_unc = gbl.JetCorrectorParameters(textfilepath_UncertaintySources)
+calc.addJESUncertainty("Total", jcp_unc)
+# Smear jets, with JER uncertainty
+calc.setSmearing(textfilepath_PtResolution, textfilepath_SF,
+    splitJER,       # decorrelate for different regions
+    True, 0.2, 3.)  # use hybrid recipe, matching parameters
+```
+The varied jet pt's and masses can be obtained by calling the ``produce`` method
+with the per-event quantities, converted to
+[`ROOT::VecOps::RVec`](https://root.cern/doc/master/classROOT_1_1VecOps_1_1RVec.html):
+```python
+from CMSJMECalculators.utils import toRVecFloat, toRVecInt
+jetVars = calc.produce(toRVecFloat(tree.Jet_pt), toRVecFloat(tree.Jet_eta), ...)
+```
+since the full list of arguments can be long, and depends on a few parameters
+(for data the MC branches are not there, and not needed, and MET needs a few
+additional inputs), a helper function is provided, which can be used as follows:
+```python
+from CMSJMECalculators.utils import getJetMETArgs
+jetVars = calc.produce(*getJetMETargs(tree, isMC=True, forMET=False))
+```
+This will return an object that contains all the variations, e.g.
+`jetVars.pt(0)` will return the `RVec` with new nominal jet PTs.
+The corresponding names of the variations, which depend on the configuration,
+can be retrieved from the calculator by calling its `available()` method.
+
+### From (JITted) RDataFrame
+
+When constructing the RDataFrame graph from python, the calculator needs to be
+constructed directly from the cling interpreter, such that it is available in
+the global C++ namespace for JITted code:
+```python
+gbl.gROOT.ProcessLine("JetVariationsCalculator myJetVarCalc{};")
+calc = getattr(gbl, "myJetVarCalc")
+```
+the second line retrieves a reference from PyROOT, such that the configuration
+methods can be called as above.
+
+Inside the RDataFrame graph the varied jet pt's and masses can be defined as
+a new column:
+```python
+df.Define("ak4JetVars", "myJetVarcalc.produce(Jet_pt, Jet_eta, Jet_phi, ...)")
+```
+(the full set of arguments is not reproduced here, but can be found from the
+`utils.getJetMETargs` method; since RDataFrame uses `RVec` internally
+no converson is needed).
+
+### From C++
+
+The PyROOT example above relies on the automatically generated bindings, so
+the C++ equivalent is almost identical, and straigthforward to obtain.
+When calling the `produce` method outside RDataFrame, most of the arguments
+may need to be converted to `RVec`, which fortunately supports all common
+kinds of array interfaces.
+
+TODO expand C++ examples
 
 ## Testing and development
 
