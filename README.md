@@ -124,7 +124,7 @@ df.Define("ak4JetVars", "myJetVarcalc.produce(Jet_pt, Jet_eta, Jet_phi, ...)")
 ```
 (the full set of arguments is not reproduced here, but can be found from the
 `utils.getJetMETargs` method; since RDataFrame uses `RVec` internally
-no converson is needed).
+no conversion is needed).
 
 ### From C++
 
@@ -135,6 +135,23 @@ may need to be converted to `RVec`, which fortunately supports all common
 kinds of array interfaces.
 
 TODO expand C++ examples
+
+### Caching the text files
+
+Since the JEC and JER parameter text files need to be downloaded from the
+corresponding repositories, which are quite big, a helper is provided that
+downloads only the files that are used, and caches them locally.
+It can be used like this (see the tests for more examples):
+```python
+from CMSJMECalculators.jetdatabasecache import JetDatabaseCache
+jecDBCache = JetDatabaseCache("JECDatabase", repository="cms-jet/JECDatabase")
+jrDBCache = JetDatabaseCache("JRDatabase", repository="cms-jet/JRDatabase")
+# usage example, returns the local path
+pl = jecDBCache.getPayload("Summer16_07Aug2017_V11_MC", "L1FastJet", "AK4PFchs")
+```
+The caches can also be updated and used interactively with the
+`checkCMSJMEDatabaseCaches` script in the package, which will construct the
+two database cache helper and start an IPython shell.
 
 ## Testing and development
 
