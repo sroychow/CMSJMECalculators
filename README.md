@@ -7,6 +7,9 @@ for use with samples in the NanoAOD format.
 The code was adopted from the [bamboo](https://gitlab.cern.ch/cp3-cms/bamboo)
 analysis framework.
 
+**NOTE: This is a preview to gather feedback (please open an issue with yours),
+without any guarantees of stability (including in naming) for now**
+
 ## Installation
 
 For using these helpers from python, the recommended solution is to install
