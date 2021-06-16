@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  conda:
+    name: tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: cache conda packages
+        uses: actions/cache@v2
+        env:
+          # Increase this value to reset cache if test-environment.yml has not change
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('test-environment.yml') }}
+      - name: cache JEC/JER text files
+        uses: actions/cache@v2
+        with:
+          path: |
+            tests/data/JECDatabase
+            tests/data/JRDatabase
+          key: ${{ runner.os }}-pip-${{ hashFiles('tests/test_jmesystcalc.py') }}
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniforge-variant: Mambaforge
+          use-mamba: true
+          environment-file: test-environment.yml
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+      - name: install
+        run: pip install .[test]
+      - name: test
+        run: pytest tests
