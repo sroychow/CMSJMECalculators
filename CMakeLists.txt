@@ -30,7 +30,7 @@ string(REGEX REPLACE "[^;]+/src/([^;]+)" "${CMAKE_CURRENT_BINARY_DIR}/CMSJet/src
 add_custom_target(CMSJetSources COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/getjetclasses.sh COMMENT "Copying jet classes from CMSSW" BYPRODUCTS ${INC_CMSJET} ${SRC_CMSJET})
 install(FILES ${INC_CMSJET} DESTINATION ${PKG_HDR_INSTALL})
 
-add_library(CMSJMECalculators SHARED ${SRC_CMSJET} src/JMESystematicsCalculators.cc)
+add_library(CMSJMECalculators SHARED ${SRC_CMSJET} src/FatJetVariationsCalculator.cc src/FixEE2017Type1METVariationsCalculator.cc src/JetMETVariationsCalculatorBase.cc src/JetVariationsCalculator.cc src/Type1METVariationsCalculator.cc)
 add_dependencies(CMSJMECalculators CMSJetSources)
 target_include_directories(CMSJMECalculators PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/interface> $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CMSJet/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CMSJet/src> $<INSTALL_INTERFACE:${PKG_HDR_INSTALL}>)
 target_link_libraries(CMSJMECalculators ROOT::Hist ROOT::ROOTVecOps ROOT::Physics)
